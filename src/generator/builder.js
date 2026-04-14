@@ -15,6 +15,9 @@ const {
   ambiguityDirective,
 } = require('./templates');
 
+/** Minimum word count required before a task description is considered self-sufficient */
+const MIN_TASK_WORD_COUNT = 5;
+
 /**
  * Builds one or more prompt strings from an analysis result.
  *
@@ -112,7 +115,7 @@ function sanitizeTaskDescription(input, intent, domain) {
   cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
 
   // If very short (likely vague), add a structural hint
-  if (cleaned.split(/\s+/).length < 5) {
+  if (cleaned.split(/\s+/).length < MIN_TASK_WORD_COUNT) {
     return `${cleaned}\n\n(Provide a complete, production-ready implementation.)`;
   }
 

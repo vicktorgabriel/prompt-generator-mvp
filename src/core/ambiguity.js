@@ -6,6 +6,21 @@
  * High ambiguity triggers multi-variant output or clarification hints.
  */
 
+/** Word count below which an input is considered short and inherently ambiguous */
+const SHORT_INPUT_WORD_THRESHOLD = 8;
+
+/** Score added when the input is shorter than SHORT_INPUT_WORD_THRESHOLD */
+const SHORT_INPUT_PENALTY = 0.25;
+
+/** Score reduction applied per detected clarity signal */
+const CLARITY_DISCOUNT_FACTOR = 0.08;
+
+/** Score boundary between 'medium' and 'high' ambiguity levels */
+const HIGH_AMBIGUITY_THRESHOLD = 0.40;
+
+/** Score boundary between 'low' and 'medium' ambiguity levels */
+const MEDIUM_AMBIGUITY_THRESHOLD = 0.25;
+
 /** Words and phrases that increase ambiguity */
 const VAGUENESS_SIGNALS = [
   /\b(something|somehow|some\s+way|a\s+bit|kind\s+of|sort\s+of|maybe|perhaps|probably|might|could)\b/i,
@@ -46,20 +61,20 @@ function scoreAmbiguity(input) {
   }
 
   const wordCount = input.trim().split(/\s+/).length;
-  const isShort = wordCount < 8;
+  const isShort = wordCount < SHORT_INPUT_WORD_THRESHOLD;
 
   // Base score from vague/clear ratio
   let score = vagueCount / (VAGUENESS_SIGNALS.length + 1);
 
   // Short inputs are inherently more ambiguous
-  if (isShort) score += 0.25;
+  if (isShort) score += SHORT_INPUT_PENALTY;
 
   // Clear signals reduce ambiguity
-  score -= clearCount * 0.08;
+  score -= clearCount * CLARITY_DISCOUNT_FACTOR;
 
   score = Math.max(0, Math.min(1, score));
 
-  const level = score < 0.25 ? 'low' : score < 0.40 ? 'medium' : 'high';
+  const level = score < MEDIUM_AMBIGUITY_THRESHOLD ? 'low' : score < HIGH_AMBIGUITY_THRESHOLD ? 'medium' : 'high';
 
   const hints = buildHints(input, vagueCount, clearCount, isShort);
 

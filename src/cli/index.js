@@ -16,7 +16,7 @@ const { generate } = require('../generator/index');
 
 const BANNER = `
 ╔══════════════════════════════════════════════════════╗
-║           prompt-gen — Intelligent Prompt Generator        ║
+║       prompt-gen — Intelligent Prompt Generator      ║
 ║  Type your task, get structured technical prompts.   ║
 ║  Commands: :quit  :clear  :help  :history            ║
 ╚══════════════════════════════════════════════════════╝
