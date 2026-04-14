@@ -1,49 +1,80 @@
-# Prompt Generator MVP
+# Prompt Generator MVP v0.6
 
-Prompt Generator MVP es una aplicación enfocada en la generación inteligente de prompts técnicos. No funciona como un chat tradicional con IA, sino como un motor que interpreta pedidos, detecta intención, evalúa ambigüedad, identifica estrategia de trabajo y produce prompts más estructurados, útiles y reutilizables.
+MVP de un generador de prompts con interfaz tipo chat, motor determinístico y arquitectura modular.
 
-## Objetivo
+## Qué trae esta versión
 
-El objetivo del proyecto es ayudar a transformar pedidos ambiguos o incompletos en prompts claros, técnicos y orientados a ejecución real, especialmente para tareas como:
+- clasificación de intención y dominio más robusta
+- detección de **estrategia de generación** (`implement_new`, `inspect_and_adapt`, `ui_fix_existing`, `migrate_existing_system`)
+- detección de **perfil de generación** (`modern_modular_landing`, `existing_frontend_audit`, `existing_system_migration`, `generic`)
+- prompts más afinados para **landings modernas altamente modulares**
+- preferencia explícita por **React + Tailwind CSS + TypeScript** cuando el pedido apunta a una landing y no fija otro stack
+- extracción de referencias reales de carpetas, repos y APIs cuando aparecen en el pedido
+- prompts más fuertes para **migraciones** y **proyectos existentes**
+- ejemplos rápidos genéricos, sin referencias al contexto personal del usuario
+- preferencias persistentes para detalle, estilo de salida, estructura de archivos y supuestos
+- feedback rápido útil/regular/malo guardado por generación
+- generación de 3 variantes de prompt
+- historial local en JSON
+- edición inline de mensajes enviados para reusar y regenerar sin reescribir
+- edición inline de prompts generados para ajustarlos antes de copiar
+- reuso rápido desde el historial reciente
+- UI web simple para probar el motor
 
-- revisión de proyectos existentes
-- migración de sistemas
-- mejoras de frontend
-- auditoría de landings
-- implementación de nuevas plataformas
-- adaptación de repos y estructuras reales
+## Requisitos
 
-## Enfoque
+- Node.js 20 o superior
 
-El sistema parte de un motor determinístico y modular, capaz de:
+## Uso
 
-- detectar intención del pedido
-- identificar dominio técnico
-- reconocer contexto de proyecto existente
-- evaluar ambigüedad
-- decidir una estrategia de generación
-- producir variantes de prompt con diferente nivel de síntesis
+```bash
+npm install
+npm run dev
+```
 
-## Características actuales
+Abrí:
 
-- interfaz web tipo chat
-- edición del mensaje enviado
-- edición del prompt generado
-- reutilización de entradas previas
-- historial local
-- clasificación por intención, dominio y estrategia
-- detección de referencias reales como repos, carpetas, APIs o estructuras existentes
-- generación de prompts más orientados a ejecución real
+```text
+http://localhost:4173
+```
 
-## Filosofía del proyecto
+## Scripts
 
-El proyecto no busca reemplazar al usuario con una IA conversacional, sino asistirlo en la construcción de prompts mejores, más específicos y menos genéricos, listos para usar en otras herramientas, agentes, modelos o entornos de desarrollo.
+```bash
+npm run dev
+npm run start
+npm run check
+npm run build
+```
 
-## Roadmap general
+## Estructura
 
-- fortalecer el motor de análisis semántico
-- incorporar más perfiles de generación
-- mejorar la variación entre prompts
-- añadir versión CLI
-- preparar integración futura con VS Code
-- agregar capa opcional de mejora con modelos IA
+```text
+apps/
+  web-chat/
+packages/
+  core/
+  clarification-engine/
+  prompt-templates/
+  presets/
+  shared-types/
+  storage/
+  validators/
+data/
+  preferences.json
+  history/
+    generations.json
+    feedback.json
+```
+
+## Qué conviene probar en v0.6
+
+- una landing nueva, moderna y modular
+- una auditoría de landing existente con foco en spacing, header y botones
+- una migración real a Django apoyada en una API existente
+- la edición de mensaje/prompt para iterar sin reescribir
+
+## Documentos útiles
+
+- `docs/ROADMAP_V0_6.md`
+- `docs/AI_ENHANCER_PLAN.md`

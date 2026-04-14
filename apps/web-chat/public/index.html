@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Prompt Generator Studio</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">PG</div>
+          <div>
+            <h1>Prompt Generator Studio</h1>
+            <p>v0.7 · motor optimizado</p>
+          </div>
+        </div>
+
+        <section class="sidebar-card">
+          <h2>Qué hace</h2>
+          <p>
+            Interpreta mejor el pedido, sintetiza objetivo, acciones, entregables y restricciones, y genera prompts menos genéricos. Está más afinado para migraciones reales, auditorías de proyectos existentes y landings modulares con React, Tailwind CSS y TypeScript.
+          </p>
+        </section>
+
+        <section class="sidebar-card">
+          <div class="section-heading">
+            <h2>Atajos de ejemplo</h2>
+            <button id="clearPresetButton" class="message-action ghost" type="button">Limpiar</button>
+          </div>
+          <p class="muted small" id="activePresetLabel">Sin ejemplo activo</p>
+          <div id="presetList" class="preset-list">
+            <p class="muted">Cargando ejemplos...</p>
+          </div>
+        </section>
+
+        <section class="sidebar-card">
+          <h2>Preferencias</h2>
+          <form id="preferenceForm" class="preference-form">
+            <label>
+              <span>Detalle</span>
+              <select id="detailLevel">
+                <option value="low">Bajo</option>
+                <option value="medium">Medio</option>
+                <option value="high">Alto</option>
+              </select>
+            </label>
+
+            <label>
+              <span>Estilo de salida</span>
+              <select id="outputStyle">
+                <option value="balanced">Balanceado</option>
+                <option value="step_by_step">Paso a paso</option>
+                <option value="technical">Técnico</option>
+                <option value="concise">Conciso</option>
+              </select>
+            </label>
+
+            <label class="check-row">
+              <input id="includeFileStructure" type="checkbox" />
+              <span>Incluir estructura de archivos cuando ayude</span>
+            </label>
+
+            <label class="check-row">
+              <input id="includeAssumptions" type="checkbox" />
+              <span>Mostrar supuestos explícitos</span>
+            </label>
+          </form>
+        </section>
+
+        <section class="sidebar-card">
+          <h2>Historial reciente</h2>
+          <div id="historyList" class="history-list">
+            <p class="muted">Cargando historial...</p>
+          </div>
+        </section>
+      </aside>
+
+      <main class="main-panel">
+        <header class="topbar">
+          <div>
+            <h2>Entorno chat</h2>
+            <p>Escribí una necesidad real. El motor la interpreta, sintetiza y devuelve prompts con más criterio y menos boilerplate.</p>
+          </div>
+          <div class="status-pill" id="statusPill">Listo</div>
+        </header>
+
+        <section id="messages" class="messages"></section>
+
+        <form id="chatForm" class="composer">
+          <div id="editorMode" class="editor-mode" hidden></div>
+          <textarea
+            id="messageInput"
+            placeholder="Ej: necesito migrar una plataforma existente a Django usando una API real como fuente de verdad, sin rehacer el sistema desde cero"
+            rows="4"
+          ></textarea>
+          <div class="composer-actions">
+            <p class="hint" id="composerHint">Tip: cuanto más claro sea el objetivo, mejor será el prompt.</p>
+            <button type="submit" id="sendButton">Enviar</button>
+          </div>
+        </form>
+      </main>
+    </div>
+
+    <template id="userMessageTemplate">
+      <article class="message user">
+        <div class="message-meta">Vos</div>
+        <div class="message-body"></div>
+        <div class="message-actions"></div>
+      </article>
+    </template>
+
+    <template id="assistantMessageTemplate">
+      <article class="message assistant">
+        <div class="message-meta">Generador</div>
+        <div class="message-body"></div>
+      </article>
+    </template>
+
+    <template id="promptCardTemplate">
+      <section class="prompt-card">
+        <div class="prompt-card-header">
+          <div>
+            <h3></h3>
+            <p class="prompt-kind"></p>
+          </div>
+          <div class="prompt-card-actions">
+            <button class="message-action ghost load-prompt-button" type="button">Cargar</button>
+            <button class="message-action ghost edit-prompt-button" type="button">Editar prompt</button>
+            <button class="copy-button" type="button">Copiar</button>
+          </div>
+        </div>
+        <div class="prompt-body"></div>
+      </section>
+    </template>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
