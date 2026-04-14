@@ -1,5 +1,3 @@
-'use strict';
-
 /**
  * Domain detection module.
  * Identifies the technical domain(s) the user input belongs to.
@@ -92,4 +90,4 @@ function detectDomain(input) {
   return { primary, all: matched };
 }
 
-module.exports = { detectDomain, DOMAIN_PATTERNS };
+export { detectDomain, DOMAIN_PATTERNS };

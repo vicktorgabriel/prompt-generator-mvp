@@ -1,9 +1,7 @@
-'use strict';
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
 
-const { test } = require('node:test');
-const assert = require('node:assert/strict');
-
-const { detectContextRefs } = require('../src/core/context');
+import { detectContextRefs } from '../src/core/context.js';
 
 // ─── Context Reference Detection ─────────────────────────────────────────────
 

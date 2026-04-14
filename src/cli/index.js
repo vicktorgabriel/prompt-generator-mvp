@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-'use strict';
 
 /**
  * prompt-gen CLI
@@ -11,8 +10,8 @@
  *   prompt-gen "your input"    # single-shot mode
  */
 
-const readline = require('readline');
-const { generate } = require('../generator/index');
+import readline from 'readline';
+import { generate } from '../generator/index.js';
 
 const BANNER = `
 ╔══════════════════════════════════════════════════════╗

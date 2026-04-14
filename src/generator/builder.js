@@ -1,19 +1,17 @@
-'use strict';
-
 /**
  * Prompt builder.
  * Assembles a structured prompt from an analysis object using template fragments.
  * Applies role → directive → strategy → context → constraints → task order.
  */
 
-const {
+import {
   ROLES,
   INTENT_DIRECTIVES,
   STRATEGY_MODIFIERS,
   DOMAIN_CONSTRAINTS,
   contextDirective,
   ambiguityDirective,
-} = require('./templates');
+} from './templates.js';
 
 /** Minimum word count required before a task description is considered self-sufficient */
 const MIN_TASK_WORD_COUNT = 5;
@@ -158,4 +156,4 @@ function buildAlternativeVariant(analysis, role, constraints) {
   ].join('\n');
 }
 
-module.exports = { buildPrompts };
+export { buildPrompts };

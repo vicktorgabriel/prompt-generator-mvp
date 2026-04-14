@@ -1,13 +1,11 @@
-'use strict';
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
 
-const { test } = require('node:test');
-const assert = require('node:assert/strict');
-
-const { analyze } = require('../src/core/analyzer');
-const { detectIntent } = require('../src/core/intent');
-const { detectDomain } = require('../src/core/domain');
-const { detectStrategy } = require('../src/core/strategy');
-const { scoreAmbiguity } = require('../src/core/ambiguity');
+import { analyze } from '../src/core/analyzer.js';
+import { detectIntent } from '../src/core/intent.js';
+import { detectDomain } from '../src/core/domain.js';
+import { detectStrategy } from '../src/core/strategy.js';
+import { scoreAmbiguity } from '../src/core/ambiguity.js';
 
 // ─── Intent Detection ─────────────────────────────────────────────────────────
 

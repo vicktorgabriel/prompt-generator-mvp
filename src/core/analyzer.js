@@ -1,16 +1,14 @@
-'use strict';
-
 /**
  * Main semantic analyzer.
  * Orchestrates intent, domain, strategy, ambiguity, and context detection
  * into a unified analysis result used by the generator.
  */
 
-const { detectIntent } = require('./intent');
-const { detectDomain } = require('./domain');
-const { detectStrategy } = require('./strategy');
-const { scoreAmbiguity } = require('./ambiguity');
-const { detectContextRefs } = require('./context');
+import { detectIntent } from './intent.js';
+import { detectDomain } from './domain.js';
+import { detectStrategy } from './strategy.js';
+import { scoreAmbiguity } from './ambiguity.js';
+import { detectContextRefs } from './context.js';
 
 /**
  * Analyzes a user input string and returns a structured analysis object.
@@ -83,4 +81,4 @@ function resolveProfile(intent, domain, context) {
   return 'general';
 }
 
-module.exports = { analyze };
+export { analyze };

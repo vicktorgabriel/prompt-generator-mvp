@@ -1,5 +1,3 @@
-'use strict';
-
 /**
  * Prompt template fragments.
  * Each fragment is a function that receives the analysis object and returns a string.
@@ -102,7 +100,7 @@ const DOMAIN_CONSTRAINTS = {
   general: `Follow language-specific best practices. Prioritize readability and maintainability.`,
 };
 
-module.exports = {
+export {
   ROLES,
   INTENT_DIRECTIVES,
   STRATEGY_MODIFIERS,

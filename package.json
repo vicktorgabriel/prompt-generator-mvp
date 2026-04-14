@@ -1,26 +1,29 @@
 {
-  "name": "prompt-generator",
-  "version": "1.0.0",
-  "description": "Intelligent prompt generator with semantic analysis, intent/domain/strategy detection and context-aware output",
-  "main": "src/index.js",
+  "name": "prompt-generator-mvp",
+  "version": "0.7.0",
+  "private": true,
+  "type": "module",
+  "description": "MVP de generador inteligente de prompts con motor semántico determinístico, interfaz web y CLI.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "tsx watch apps/web-chat/src/server.ts",
+    "start": "tsx apps/web-chat/src/server.ts",
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc --noEmit -p tsconfig.json",
+    "cli": "node src/cli/index.js",
+    "test": "node --test tests/*.test.js"
+  },
   "bin": {
     "prompt-gen": "src/cli/index.js"
   },
-  "scripts": {
-    "start": "node src/cli/index.js",
-    "test": "node --test tests/*.test.js",
-    "lint": "node --check src/**/*.js"
+  "dependencies": {
+    "express": "^4.21.2"
   },
-  "keywords": [
-    "prompt",
-    "generator",
-    "ai",
-    "cli",
-    "semantic"
-  ],
-  "author": "vicktorgabriel",
-  "license": "MIT",
-  "engines": {
-    "node": ">=18.0.0"
+  "devDependencies": {
+    "@types/express": "^5.0.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.8.3"
   }
 }

@@ -1,5 +1,3 @@
-'use strict';
-
 /**
  * Ambiguity detection module.
  * Scores how vague or underspecified a user input is (0 = clear, 1 = very ambiguous).
@@ -106,4 +104,4 @@ function buildHints(input, vagueCount, clearCount, isShort) {
   return hints;
 }
 
-module.exports = { scoreAmbiguity };
+export { scoreAmbiguity };

@@ -1,5 +1,3 @@
-'use strict';
-
 /**
  * Intent detection module.
  * Identifies the primary action the user wants to perform.
@@ -134,4 +132,4 @@ function detectIntent(input) {
   return { intent: sorted[0][0], confidence: parseFloat(confidence.toFixed(2)) };
 }
 
-module.exports = { detectIntent, INTENT_PATTERNS };
+export { detectIntent, INTENT_PATTERNS };

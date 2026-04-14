@@ -1,5 +1,3 @@
-'use strict';
-
 /**
  * Strategy detection module.
  * Determines the best generation strategy given the user's intent and input phrasing.
@@ -98,4 +96,4 @@ function detectStrategy(input, analysis = {}) {
   return { strategy: sorted[0][0] };
 }
 
-module.exports = { detectStrategy, STRATEGY_PATTERNS };
+export { detectStrategy, STRATEGY_PATTERNS };

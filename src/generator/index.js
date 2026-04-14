@@ -1,12 +1,10 @@
-'use strict';
-
 /**
  * Main generator entry point.
  * Combines analysis + building into the public generate() API.
  */
 
-const { analyze } = require('../core/analyzer');
-const { buildPrompts } = require('./builder');
+import { analyze } from '../core/analyzer.js';
+import { buildPrompts } from './builder.js';
 
 /**
  * Generates one or more technical prompts from a user input string.
@@ -23,4 +21,4 @@ function generate(input) {
   return { analysis, prompts };
 }
 
-module.exports = { generate };
+export { generate };

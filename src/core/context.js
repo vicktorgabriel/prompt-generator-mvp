@@ -1,5 +1,3 @@
-'use strict';
-
 /**
  * Context reference detector.
  * Identifies mentions of existing artifacts in the user input:
@@ -109,4 +107,4 @@ function detectContextRefs(input) {
   return { refs, hasExistingContext };
 }
 
-module.exports = { detectContextRefs, CONTEXT_PATTERNS };
+export { detectContextRefs, CONTEXT_PATTERNS };

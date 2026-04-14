@@ -1,11 +1,9 @@
-'use strict';
-
 /**
  * prompt-generator library entry point.
  * Exposes the generate() function and the lower-level analyze() for consumers.
  */
 
-const { generate } = require('./generator/index');
-const { analyze } = require('./core/analyzer');
+import { generate } from './generator/index.js';
+import { analyze } from './core/analyzer.js';
 
-module.exports = { generate, analyze };
+export { generate, analyze };
