@@ -3,7 +3,7 @@
   "version": "0.7.0",
   "private": true,
   "type": "module",
-  "description": "MVP v0.7 de generador de prompts con motor más fino para landings modulares, React/Tailwind/TypeScript y proyectos existentes.",
+  "description": "MVP de generador inteligente de prompts con motor semántico determinístico, interfaz web y CLI.",
   "engines": {
     "node": ">=20"
   },
@@ -11,7 +11,12 @@
     "dev": "tsx watch apps/web-chat/src/server.ts",
     "start": "tsx apps/web-chat/src/server.ts",
     "build": "tsc -p tsconfig.json",
-    "check": "tsc --noEmit -p tsconfig.json"
+    "check": "tsc --noEmit -p tsconfig.json",
+    "cli": "node src/cli/index.js",
+    "test": "node --test tests/*.test.js"
+  },
+  "bin": {
+    "prompt-gen": "src/cli/index.js"
   },
   "dependencies": {
     "express": "^4.21.2"
