@@ -1,10 +1,12 @@
 # Prompt Generator MVP
 
-> An intelligent prompt engineering tool — not a generic AI chat.
+> An intelligent prompt engineering tool with multi-model generation and quality quantification.
 
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20-339933?logo=node.js)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+**v0.8** - Now with Gemini, Claude, Codex & Universal prompt structures + Quality metrics
 
 ---
 
@@ -36,7 +38,10 @@ It is **not** a wrapper around an AI chat API. The core engine is rule-based and
 | **Ambiguity scoring** | Scores vagueness (`low` / `medium` / `high`) and generates clarification questions when needed |
 | **Context reference detection** | Identifies mentions of existing artifacts (repos, folders, APIs, models, tables, components, configs) to prioritize adaptation over invention |
 | **Request synthesis** | Extracts goal, work mode, expected deliverables, preferred stack, constraints and quality targets before generating the prompt |
-| **Prompt variants** | Produces 3 differentiated variants: analytical prompt, execution brief, and concise prompt |
+| **Multi-model generation** | Generates prompts optimized for Gemini, Claude, Codex/GPT-4, and Universal hybrid structures |
+| **Quality quantification** | Scores prompts on 5 dimensions: Structure, Clarity, Specificity, Completeness, Formatting (0-100 scale) |
+| **Prompt amplification** | Automatically adds reasoning steps, quality criteria, edge case handling, and validation rules |
+| **Basic quality reduction** | Removes filler phrases, weak verbs, and hedging language for more direct, professional prompts |
 
 ### Architecture
 

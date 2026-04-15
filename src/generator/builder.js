@@ -2,6 +2,7 @@
  * Prompt builder.
  * Assembles a structured prompt from an analysis object using template fragments.
  * Applies role → directive → strategy → context → constraints → task order.
+ * Now includes multi-model generation and quality quantification.
  */
 
 import {
@@ -13,6 +14,13 @@ import {
   ambiguityDirective,
 } from './templates.js';
 
+import {
+  generateMultiModelPrompts,
+  quantifyPrompt,
+  amplifyPrompt,
+  reduceBasicQuality,
+} from './quantifier.js';
+
 /** Minimum word count required before a task description is considered self-sufficient */
 const MIN_TASK_WORD_COUNT = 5;
 
@@ -20,13 +28,27 @@ const MIN_TASK_WORD_COUNT = 5;
  * Builds one or more prompt strings from an analysis result.
  *
  * Returns an array because high-ambiguity inputs generate multiple variants.
+ * Now includes multi-model generation (Gemini, Claude, Codex, Universal) with quality quantification.
  *
  * @param {object} analysis - Result from analyzer.analyze()
- * @returns {string[]} - Array of generated prompts (usually 1, up to 2 for high ambiguity)
+ * @param {object} options - Generation options
+ * @param {string[]} options.models - Models to generate for ('gemini', 'claude', 'codex', 'universal')
+ * @param {boolean} options.amplify - Whether to amplify prompt quality
+ * @param {boolean} options.reduceBasic - Whether to reduce basic quality patterns
+ * @returns {{prompts: string[], multiModel: object, quality: object}} - Enhanced result with metrics
  */
-function buildPrompts(analysis) {
+function buildPrompts(analysis, options = {}) {
+  const { 
+    models = ['universal'], 
+    amplify = true, 
+    reduceBasic = true 
+  } = options;
+  
   const { intent, domain, strategy, ambiguity, context, input, domains } = analysis;
 
+  // Generate multi-model prompts with quantification
+  const multiModelResult = generateMultiModelPrompts(analysis, models);
+  
   // Resolve role (prefer most specific domain)
   const roleKey = domain === 'fullstack'
     ? 'fullstack'
@@ -61,7 +83,7 @@ function buildPrompts(analysis) {
   // Ambiguity handling
   const ambiguityMod = ambiguityDirective(ambiguity);
 
-  // Build the prompt
+  // Build the base prompt
   const parts = [
     role,
     '',
@@ -78,14 +100,51 @@ function buildPrompts(analysis) {
     multiDomain.trim() ? multiDomain.trim() : null,
   ].filter((p) => p !== null);
 
-  const prompt = parts.join('\n');
+  let prompt = parts.join('\n');
+  
+  // Apply quality enhancements
+  if (reduceBasic) {
+    prompt = reduceBasicQuality(prompt);
+  }
+  
+  if (amplify) {
+    prompt = amplifyPrompt(prompt);
+  }
+
+  // Quantify the base prompt
+  const baseQuality = quantifyPrompt(prompt);
 
   // For high ambiguity, return two variants
   if (ambiguity.level === 'high') {
-    return [prompt, buildAlternativeVariant(analysis, role, constraints)];
+    let alternative = buildAlternativeVariant(analysis, role, constraints);
+    if (reduceBasic) alternative = reduceBasicQuality(alternative);
+    if (amplify) alternative = amplifyPrompt(alternative);
+    
+    return {
+      prompts: [prompt, alternative],
+      multiModel: multiModelResult,
+      quality: {
+        base: baseQuality,
+        alternative: quantifyPrompt(alternative),
+        multiModel: models.reduce((acc, model) => {
+          acc[model] = multiModelResult[`${model}_quality`];
+          return acc;
+        }, {}),
+      },
+    };
   }
 
-  return [prompt];
+  return {
+    prompts: [prompt],
+    multiModel: multiModelResult,
+    quality: {
+      base: baseQuality,
+      multiModel: models.reduce((acc, model) => {
+        acc[model] = multiModelResult[`${model}_quality`];
+        return acc;
+      }, {}),
+    },
+  };
 }
 
 /**
