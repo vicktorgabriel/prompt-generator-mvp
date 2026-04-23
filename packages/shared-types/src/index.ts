@@ -14,12 +14,15 @@ export type DomainType =
   | "general"
   | "python"
   | "django"
+  | "backend"
   | "react"
   | "pyqt"
   | "api"
   | "trading"
   | "web_app"
   | "frontend"
+  | "architecture"
+  | "devops"
   | "desktop_app";
 
 export type PromptStrategy =

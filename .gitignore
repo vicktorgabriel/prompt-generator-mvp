@@ -93,3 +93,5 @@ dmypy.json
 # Generated documentation
 docs/_build/
 ```
+data/history/feedback.json
+data/history/generations.json

@@ -1,6 +1,6 @@
 {
-  "detailLevel": "medium",
-  "outputStyle": "balanced",
+  "detailLevel": "high",
+  "outputStyle": "concise",
   "includeFileStructure": true,
   "includeAssumptions": true
 }

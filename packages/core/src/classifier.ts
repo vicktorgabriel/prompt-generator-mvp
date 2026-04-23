@@ -57,6 +57,40 @@ function hasWord(ctx: AnalysisContext, word: string): boolean {
   return ctx.uniqueTokens.has(normalizeForAnalysis(word));
 }
 
+function extractStackSignals(ctx: AnalysisContext): { fromStack: string | null; toStack: string | null } {
+  const raw = ctx.raw.toLowerCase();
+  
+  const migrations: Array<[RegExp, string]> = [
+    [/(?:monolito|monolith).*?(?:microservices|micro-?services|distributed)/i, "monolith→distributed"],
+    [/(?:microservices|micro-?services).*?(?:monolito|monolith)/i, "monolith→distributed"],
+    [/rails.*?(?:node|nodejs|nest|express)/i, "rails→node"],
+    [/(?:node|nodejs|nest|express).*?rails/i, "rails→node"],
+    [/django.*?(?:fastapi|flask)/i, "django→fastapi"],
+    [/(?:fastapi|flask).*?django/i, "django→fastapi"],
+  ];
+
+  for (const [pattern, signal] of migrations) {
+    if (pattern.test(raw)) {
+      const [from, to] = signal.split("→");
+      return { fromStack: from, toStack: to };
+    }
+  }
+  return { fromStack: null, toStack: null };
+}
+
+function hasMigrationPattern(ctx: AnalysisContext): boolean {
+  const raw = ctx.raw.toLowerCase();
+  const migrationPhrases = [
+    "migrar", "migración", "migration", "convertir", "transformar",
+    "refactorizar", "descomponer", "microservices", "micro services", "distributed",
+    "desacoplar", "estrangular", "strangler", "sacar del monolito", 
+  ];
+  const migrationWords = ["monolito", "monolith", "acoplado", "tightly", "legacy"];
+  const hasPhrase = migrationPhrases.some(p => raw.includes(p));
+  const hasWord = migrationWords.some(w => raw.includes(w));
+  return hasPhrase || (hasWord && migrationPhrases.some(p => raw.includes(p.split(" ")[0])));
+}
+
 function hasAnyWord(ctx: AnalysisContext, words: string[]): boolean {
   return words.some((word) => hasWord(ctx, word));
 }
@@ -155,6 +189,8 @@ function detectIntent(ctx: AnalysisContext): {
   const scores = new Map<IntentType, number>();
   const reasons = new Map<IntentType, string[]>();
 
+  const stackSignals = extractStackSignals(ctx);
+  const migrationPattern = hasMigrationPattern(ctx);
   const projectContext =
     hasAnyWord(ctx, [
       "repo",
@@ -172,6 +208,14 @@ function detectIntent(ctx: AnalysisContext): {
       "existentes",
       "actual",
     ]) || extractProjectReferences(ctx).length > 0;
+
+  if (migrationPattern && stackSignals.fromStack) {
+    addScore(scores, "architecture_design", 10, reasons, `detecta migración de ${stackSignals.fromStack} a ${stackSignals.toStack}`);
+  } else if (migrationPattern && projectContext) {
+    addScore(scores, "architecture_design", 8, reasons, "detecta patrón de migración/refactorización con proyecto existente");
+  } else if (migrationPattern) {
+    addScore(scores, "architecture_design", 6, reasons, "menciona términos de migración o arquitectura");
+  }
 
   const uiSurfaceSignals =
     hasAnyWord(ctx, [
@@ -334,6 +378,15 @@ function detectDomain(ctx: AnalysisContext): {
     "componentes",
   ]);
 
+  const stackSignals = extractStackSignals(ctx);
+  if (stackSignals.fromStack === "monolith" || stackSignals.toStack === "distributed") {
+    addScore(scores, "architecture", 10, reasons, "detecta migración a arquitectura distribuida/microservices");
+  } else if (stackSignals.fromStack === "rails" || stackSignals.toStack?.includes("node")) {
+    addScore(scores, "architecture", 9, reasons, "detecta migración de Rails a Node/JS");
+  } else if (stackSignals.fromStack === "django" || stackSignals.toStack === "fastapi") {
+    addScore(scores, "backend", 8, reasons, "detecta migración de Django a FastAPI/Flask");
+  }
+
   if (hasWord(ctx, "django") || hasAnyPhrase(ctx, ["django rest", "django templates", "admin de django"])) {
     addScore(scores, "django", 9, reasons, "menciona Django o su ecosistema");
   }
@@ -379,6 +432,9 @@ function detectDomain(ctx: AnalysisContext): {
   }
 
   const selected = selectWinner(scores, reasons, "general", [
+    "architecture",
+    "devops",
+    "backend",
     "django",
     "react",
     "pyqt",
