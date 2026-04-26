@@ -100,7 +100,7 @@ const INTENT_PATTERNS = [
     patterns: [
       /\b(creat|build|make|add|implement|develop|write|design|new\s+feature|new\s+component|new\s+endpoint)\b/i,
     ],
-    weight: 1,
+    weight: 2,
   },
 ];
 

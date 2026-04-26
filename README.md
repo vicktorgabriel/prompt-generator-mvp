@@ -6,7 +6,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**v0.8** - Now with Gemini, Claude, Codex & Universal prompt structures + Quality metrics
+**v0.9** - Enhanced domains, improved intent detection, new CLI flags, comprehensive tests
 
 ---
 
@@ -32,11 +32,11 @@ It is **not** a wrapper around an AI chat API. The core engine is rule-based and
 | Capability | Description |
 |---|---|
 | **Intent detection** | Classifies the request type: `code_generation`, `debugging`, `refactor`, `migration`, `ui_design`, `review`, `documentation`, `automation` and more |
-| **Domain detection** | Identifies the technical domain: `frontend`, `backend`, `api`, `react`, `python`, `django`, `web_app`, `trading`, `desktop_app` |
+| **Domain detection** | Identifies the technical domain: `frontend`, `backend`, `api`, `react`, `python`, `django`, `web_app`, `trading`, `desktop_app` with 50+ technologies |
 | **Strategy inference** | Selects a generation strategy: `implement_new`, `inspect_and_adapt`, `ui_fix_existing`, `migrate_existing_system` |
 | **Generation profile** | Resolves the best output profile: `modern_modular_landing`, `existing_frontend_audit`, `existing_system_migration`, `generic` |
 | **Ambiguity scoring** | Scores vagueness (`low` / `medium` / `high`) and generates clarification questions when needed |
-| **Context reference detection** | Identifies mentions of existing artifacts (repos, folders, APIs, models, tables, components, configs) to prioritize adaptation over invention |
+| **Context reference detection** | Identifies mentions of existing artifacts (repos, folders, files, APIs, models, tables, components, configs) to prioritize adaptation over invention |
 | **Request synthesis** | Extracts goal, work mode, expected deliverables, preferred stack, constraints and quality targets before generating the prompt |
 | **Multi-model generation** | Generates prompts optimized for Gemini, Claude, Codex/GPT-4, and Universal hybrid structures |
 | **Quality quantification** | Scores prompts on 5 dimensions: Structure, Clarity, Specificity, Completeness, Formatting (0-100 scale) |
@@ -70,6 +70,7 @@ prompt-generator-mvp/
 │   ├── generator/             # Prompt builder and templates
 │   └── cli/                   # Interactive REPL and single-shot CLI
 ├── tests/                     # Unit tests (Node.js built-in test runner)
+│   └── test-core.js           # 51 tests for core engine
 ├── data/                      # Local history (generations.json, feedback.json)
 └── docs/                      # Architecture docs and version roadmaps
 ```
@@ -109,6 +110,25 @@ npm run cli
 node src/cli/index.js "migrate from Mongoose to Prisma in src/models/"
 ```
 
+#### CLI with flags
+
+```bash
+# Output as JSON
+node src/cli/index.js "debug the login bug" --json
+
+# Technical detailed output
+node src/cli/index.js "create a react component" --style technical --detail high
+
+# Save to file
+node src/cli/index.js "build an API" --style detailed -o api-prompt.txt
+
+# Target specific model
+node src/cli/index.js "write tests" --model claude
+
+# Skip assumptions
+node src/cli/index.js "migrate database" --no-assumptions
+```
+
 #### JavaScript API
 
 ```js
@@ -137,6 +157,17 @@ npm run cli       # Run the CLI
 npm test          # Run unit tests
 ```
 
+### CLI Flags
+
+| Flag | Description | Values |
+|------|-------------|--------|
+| `--style` | Output style | `technical`, `concise`, `detailed` |
+| `--detail` | Detail level | `low`, `medium`, `high` |
+| `--json` | Output as JSON | boolean |
+| `--model` | Target AI model | `gemini`, `claude`, `codex`, `universal` |
+| `-o`, `--output-file` | Save output to file | file path |
+| `--no-assumptions` | Skip assumption generation | boolean |
+
 ### Design Principles
 
 - **Not a chat** — every generated prompt is a structured technical instruction
@@ -152,12 +183,15 @@ npm test          # Run unit tests
 - [x] Request synthesis engine
 - [x] Local JSON history and user preferences
 - [x] CLI with interactive REPL and single-shot mode
-- [x] 51 unit tests
-- [ ] Deeper semantic patterns per domain
-- [ ] CLI flags (`--style`, `--detail`, `--json`, `--output-file`)
-- [ ] Prompt export to file
-- [ ] Optional AI enhancement layer (Ollama → OpenRouter → LiteLLM)
-- [ ] VS Code extension
+- [x] 51 unit tests (JavaScript core + TypeScript packages)
+- [x] CLI flags (`--style`, `--detail`, `--json`, `--output-file`)
+- [x] Enhanced domain detection (+50 technologies)
+- [x] Improved intent detection (balanced weights)
+- [x] File path context detection
+- [ ] Prompt export to file (via CLI)
+- [ ] Patrones semánticos más profundos por dominio
+- [ ] Capa opcional de mejora con IA (Ollama → OpenRouter → LiteLLM)
+- [ ] Extensión para VS Code
 
 ---
 
@@ -175,11 +209,11 @@ npm test          # Run unit tests
 | Capacidad | Descripción |
 |---|---|
 | **Detección de intención** | Clasifica el tipo de pedido: `code_generation`, `debugging`, `refactor`, `migration`, `ui_design`, `review`, `documentation`, `automation` y más |
-| **Detección de dominio** | Identifica el dominio técnico: `frontend`, `backend`, `api`, `react`, `python`, `django`, `web_app`, `trading`, `desktop_app` |
+| **Detección de dominio** | Identifica el dominio técnico: `frontend`, `backend`, `api`, `react`, `python`, `django`, `web_app`, `trading`, `desktop_app` con 50+ tecnologías |
 | **Inferencia de estrategia** | Selecciona la estrategia de generación: `implement_new`, `inspect_and_adapt`, `ui_fix_existing`, `migrate_existing_system` |
 | **Perfil de generación** | Resuelve el perfil óptimo: `modern_modular_landing`, `existing_frontend_audit`, `existing_system_migration`, `generic` |
 | **Puntaje de ambigüedad** | Evalúa la vaguedad (`low` / `medium` / `high`) y genera preguntas de clarificación cuando es necesario |
-| **Detección de contexto** | Identifica referencias a artefactos existentes (repos, carpetas, APIs, modelos, tablas, componentes, configs) para priorizar adaptación sobre invención |
+| **Detección de contexto** | Identifica referencias a artefactos existentes (repos, carpetas, archivos, APIs, modelos, tablas, componentes, configs) para priorizar adaptación sobre invención |
 | **Síntesis del pedido** | Extrae objetivo, modo de trabajo, entregables esperados, stack preferido, restricciones y criterios de calidad antes de generar el prompt |
 | **Variantes de prompt** | Produce 3 variantes diferenciadas: prompt analítico, brief de ejecución y prompt compacto |
 
@@ -210,6 +244,7 @@ prompt-generator-mvp/
 │   ├── generator/             # Constructor de prompts y plantillas
 │   └── cli/                   # REPL interactivo y modo de ejecución única
 ├── tests/                     # Tests unitarios (runner nativo de Node.js)
+│   └── test-core.js           # 51 tests para el motor core
 ├── data/                      # Historial local (generations.json, feedback.json)
 └── docs/                      # Documentación de arquitectura y roadmaps
 ```
@@ -249,6 +284,25 @@ npm run cli
 node src/cli/index.js "migrar de Mongoose a Prisma en src/models/"
 ```
 
+#### CLI con flags
+
+```bash
+# Salida como JSON
+node src/cli/index.js "debug el bug de login" --json
+
+# Salida técnica detallada
+node src/cli/index.js "crear un componente react" --style technical --detail high
+
+# Guardar en archivo
+node src/cli/index.js "construir una API" --style detailed -o api-prompt.txt
+
+# Modelo específico
+node src/cli/index.js "escribir tests" --model claude
+
+# Sin suposiciones
+node src/cli/index.js "migrar base de datos" --no-assumptions
+```
+
 #### API JavaScript
 
 ```js
@@ -277,6 +331,17 @@ npm run cli       # Ejecutar la CLI
 npm test          # Ejecutar tests unitarios
 ```
 
+### Flags de CLI
+
+| Flag | Descripción | Valores |
+|------|-------------|---------|
+| `--style` | Estilo de salida | `technical`, `concise`, `detailed` |
+| `--detail` | Nivel de detalle | `low`, `medium`, `high` |
+| `--json` | Salida como JSON | booleano |
+| `--model` | Modelo AI objetivo | `gemini`, `claude`, `codex`, `universal` |
+| `-o`, `--output-file` | Guardar salida en archivo | ruta de archivo |
+| `--no-assumptions` | Omitir generación de suposiciones | booleano |
+
 ### Principios de diseño
 
 - **No es un chat** — cada prompt generado es una instrucción técnica estructurada
@@ -292,10 +357,13 @@ npm test          # Ejecutar tests unitarios
 - [x] Motor de síntesis del pedido
 - [x] Historial JSON local y preferencias de usuario
 - [x] CLI con REPL interactivo y modo de ejecución única
-- [x] 51 tests unitarios
+- [x] 51 tests unitarios (core JavaScript + packages TypeScript)
+- [x] Flags de CLI (`--style`, `--detail`, `--json`, `--output-file`)
+- [x] Detección mejorada de dominio (+50 tecnologías)
+- [x] Detección mejorada de intención (weights equilibrados)
+- [x] Detección de rutas de archivos en contexto
+- [ ] Exportación de prompts a archivo (vía CLI)
 - [ ] Patrones semánticos más profundos por dominio
-- [ ] Flags de CLI (`--style`, `--detail`, `--json`, `--output-file`)
-- [ ] Exportación de prompts a archivo
 - [ ] Capa opcional de mejora con IA (Ollama → OpenRouter → LiteLLM)
 - [ ] Extensión para VS Code
 
@@ -315,11 +383,11 @@ npm test          # Ejecutar tests unitarios
 | Capacidade | Descrição |
 |---|---|
 | **Detecção de intenção** | Classifica o tipo de pedido: `code_generation`, `debugging`, `refactor`, `migration`, `ui_design`, `review`, `documentation`, `automation` e mais |
-| **Detecção de domínio** | Identifica o domínio técnico: `frontend`, `backend`, `api`, `react`, `python`, `django`, `web_app`, `trading`, `desktop_app` |
+| **Detecção de domínio** | Identifica o domínio técnico: `frontend`, `backend`, `api`, `react`, `python`, `django`, `web_app`, `trading`, `desktop_app` com 50+ tecnologias |
 | **Inferência de estratégia** | Seleciona a estratégia de geração: `implement_new`, `inspect_and_adapt`, `ui_fix_existing`, `migrate_existing_system` |
 | **Perfil de geração** | Resolve o perfil ideal: `modern_modular_landing`, `existing_frontend_audit`, `existing_system_migration`, `generic` |
 | **Pontuação de ambiguidade** | Avalia a vagueza (`low` / `medium` / `high`) e gera perguntas de esclarecimento quando necessário |
-| **Detecção de contexto** | Identifica referências a artefatos existentes (repos, pastas, APIs, modelos, tabelas, componentes, configs) para priorizar adaptação sobre invenção |
+| **Detecção de contexto** | Identifica referências a artefactos existentes (repos, pastas, arquivos, APIs, modelos, tabelas, componentes, configs) para priorizar adaptação sobre invenção |
 | **Síntese do pedido** | Extrai objetivo, modo de trabalho, entregas esperadas, stack preferido, restrições e critérios de qualidade antes de gerar o prompt |
 | **Variantes de prompt** | Produz 3 variantes diferenciadas: prompt analítico, brief de execução e prompt compacto |
 
@@ -350,6 +418,7 @@ prompt-generator-mvp/
 │   ├── generator/             # Construtor de prompts e templates
 │   └── cli/                   # REPL interativo e modo de execução única
 ├── tests/                     # Testes unitários (runner nativo do Node.js)
+│   └── test-core.js           # 51 testes para o motor core
 ├── data/                      # Histórico local (generations.json, feedback.json)
 └── docs/                      # Documentação de arquitetura e roadmaps
 ```
@@ -389,6 +458,25 @@ npm run cli
 node src/cli/index.js "migrar de Mongoose para Prisma em src/models/"
 ```
 
+#### CLI com flags
+
+```bash
+# Saída como JSON
+node src/cli/index.js "debug do bug de login" --json
+
+# Saída técnica detalhada
+node src/cli/index.js "criar um componente react" --style technical --detail high
+
+# Salvar em arquivo
+node src/cli/index.js "construir uma API" --style detailed -o api-prompt.txt
+
+# Modelo específico
+node src/cli/index.js "escrever testes" --model claude
+
+# Sem suposições
+node src/cli/index.js "migrar banco de dados" --no-assumptions
+```
+
 #### API JavaScript
 
 ```js
@@ -417,6 +505,17 @@ npm run cli       # Executar a CLI
 npm test          # Executar testes unitários
 ```
 
+### Flags de CLI
+
+| Flag | Descrição | Valores |
+|------|-------------|---------|
+| `--style` | Estilo de saída | `technical`, `concise`, `detailed` |
+| `--detail` | Nível de detalhe | `low`, `medium`, `high` |
+| `--json` | Saída como JSON | booleano |
+| `--model` | Modelo AI alvo | `gemini`, `claude`, `codex`, `universal` |
+| `-o`, `--output-file` | Salvar saída em arquivo | caminho do arquivo |
+| `--no-assumptions` | Omitir geração de suposições | booleano |
+
 ### Princípios de design
 
 - **Não é um chat** — cada prompt gerado é uma instrução técnica estruturada
@@ -432,10 +531,12 @@ npm test          # Executar testes unitários
 - [x] Motor de síntese do pedido
 - [x] Histórico JSON local e preferências do usuário
 - [x] CLI com REPL interativo e modo de execução única
-- [x] 51 testes unitários
+- [x] 51 testes unitários (core JavaScript + packages TypeScript)
+- [x] Flags de CLI (`--style`, `--detail`, `--json`, `--output-file`)
+- [x] Detecção melhorada de domínio (+50 tecnologias)
+- [x] Detecção melhorada de intenção (weights equilibrados)
+- [x] Detecção de caminhos de arquivos em contexto
+- [ ] Exportação de prompts para arquivo (via CLI)
 - [ ] Padrões semânticos mais profundos por domínio
-- [ ] Flags de CLI (`--style`, `--detail`, `--json`, `--output-file`)
-- [ ] Exportação de prompts para arquivo
 - [ ] Camada opcional de melhoria com IA (Ollama → OpenRouter → LiteLLM)
 - [ ] Extensão para VS Code
-

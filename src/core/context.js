@@ -3,6 +3,7 @@
  * Identifies mentions of existing artifacts in the user input:
  *   - repos   : GitHub/GitLab URLs, "this repo", "my repo"
  *   - folders : filesystem paths like src/, ./components, /api
+ *   - files   : specific file paths like src/app.js, /path/to/file.ts
  *   - apis    : existing API names or base URLs
  *   - models  : data model / entity references
  *   - tables  : database table references
@@ -26,6 +27,21 @@ const CONTEXT_PATTERNS = [
       /\b(src\/|app\/|components\/|pages\/|api\/|lib\/|utils\/|hooks\/|services\/|controllers\/|models\/|routes\/|tests?\/|\.\/\w+\/)/i,
       /\bfolder\s+(called|named)\s+\w+/i,
       /\bin\s+the\s+\w+\s+folder\b/i,
+    ],
+  },
+  {
+    type: 'file',
+    patterns: [
+      // Relative paths: ./path, ../path, path/to/file
+      /(?<![.\w])\.\.?\/[\w./-]+(?:\.\w+)?(?:\:\d+)?/,
+      // Absolute Unix paths: /home/user/project/file.ts
+      /(?<![.\w])\/[\w.-]+(\/[\w.-]+)*\/\S+\.\w+(?:\:\d+)?(?!\w)/,
+      // Common file extensions with context: src/components/Button.tsx, package.json
+      /\b[\w-]+\/[\w-]+\.\w{1,10}\b/i,
+      // Package.json, tsconfig.json, etc.
+      /\b\w+\.config\.\w+\b/i,
+      /\b(package|tsconfig|babel|jest|vitest|webpack|vite|eslint|prettier|dockerfile)\.json\b/i,
+      /\b(\.env|\.gitignore|\.eslintrc|\.prettierrc)\b/i,
     ],
   },
   {

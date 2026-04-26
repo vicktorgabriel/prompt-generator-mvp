@@ -17,37 +17,51 @@ const DOMAIN_PATTERNS = [
   {
     domain: 'frontend',
     patterns: [
-      /\b(react|vue|angular|svelte|next\.?js|nuxt|html|css|scss|sass|tailwind|bootstrap|styled.?compon|component|jsx|tsx|dom|browser|ui|ux|page|layout|responsive|animation|figma|storybook|webpack|vite|parcel)\b/i,
+      /\b(react|vue|angular|svelte|html|css|scss|sass|tailwind|bootstrap|styled.?compon|component|jsx|tsx|dom|browser|ui|ux|page|layout|responsive|animation|figma|storybook|webpack|vite|parcel)\b/i,
+      /\b(remix|astro|sveltekit|next\.?js|gatsby|nuxt|quasar|bulma|materialize|tachyons|purecss|milligram)\b/i,
+      /\b(react-router|vue-router|wouter|@tanstack|redux|zustand|pinia|vuex|mobx|jotai|recoil|framer-motion|gsap)\b/i,
+      /\b(chakra.?ui|radix|mantine|headless.?ui|semantic.?ui|ant.?design|daisyui|windicss|unocss|vanilla-extract)\b/i,
     ],
   },
   {
     domain: 'backend',
     patterns: [
       /\b(node\.?js|express|fastapi|django|flask|spring|laravel|rails|nestjs|hapi|koa|fastify|middleware|server|endpoint|route|handler|controller|service|repository|rest\s+api|http\s+server|microservice)\b/i,
+      /\b(golang|go|rust|elixir|phoenix|crystal|java|spring\s+boot|scala|play\s+framework|vert\.?x|actix)\b/i,
+      /\b(grpc|thrift|message.?queue|rabbitmq|kafka|redis|stripe|payment|gateway|auth|jwt|paseto)\b/i,
+      /\b(apollo\s+server|graphql\s+api|prisma\s+client|trpc)\b/i,
     ],
   },
   {
     domain: 'database',
     patterns: [
       /\b(sql|nosql|postgres|postgresql|mysql|sqlite|mongodb|redis|cassandra|dynamodb|firebase|prisma|sequelize|typeorm|knex|drizzle|orm|migration|schema|table|column|row|query|index|transaction|relation|join|aggregate)\b/i,
+      /\b(supabase|planetscale|turso|neon|cockroachdb|mattermost|hasura|data-api)\b/i,
+      /\b(elasticsearch|solr|meilisearch|typesense|opensearch|search\s+index)\b/i,
     ],
   },
   {
     domain: 'devops',
     patterns: [
       /\b(docker|kubernetes|k8s|helm|ci\/cd|github\s+actions|gitlab\s+ci|jenkins|terraform|ansible|nginx|proxy|deploy|pipeline|container|image|pod|cluster|ingress|secret|configmap|cloud|aws|gcp|azure|vercel|netlify|heroku)\b/i,
+      /\b(traefik|istio|linkerd|envoy|consul|vault|argocd|flux|argoproj|prometheus|grafana|datadog|newrelic|sentry)\b/i,
+      /\b(serverless|lambda|cloudflare\s+workers|edge\s+computing|faas)\b/i,
+      /\b(multipass|minikube|k3s|kind|docker.?compose|podman|buildah|kaniko|pack)\b/i,
     ],
   },
   {
     domain: 'mobile',
     patterns: [
       /\b(react\s+native|flutter|expo|ios|android|swift|kotlin|xcode|gradle|push\s+notification|app\s+store|play\s+store|mobile\s+app|navigation|screen|native)\b/i,
+      /\b(tamagui|gluestack|ignite|realm|watermelondb|sqlite|reanimated|react.?navigation|native.?stack)\b/i,
     ],
   },
   {
     domain: 'ml',
     patterns: [
       /\b(machine\s+learning|deep\s+learning|neural\s+network|model\s+train|dataset|feature\s+engineer|pytorch|tensorflow|keras|scikit|pandas|numpy|embedding|llm|gpt|fine.?tun|inference|vector\s+db|rag|langchain)\b/i,
+      /\b(hugging\s+face|ollama|llama\s*\.?\s*index|chromadb|pinecone|weaviate|milvus|qdrant|langsmith)\b/i,
+      /\b(stablediffusion|midjourney|imagegen|whisper|ollama|localai|textgen|text\s+embedding|tokenizer)\b/i,
     ],
   },
   {
