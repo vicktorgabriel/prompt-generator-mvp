@@ -98,7 +98,18 @@ function detectDomain(input) {
     return { primary: 'fullstack', all: matched };
   }
 
-  // Prefer more specific domains over 'api' when combined
+  const hasApi = matched.includes('api');
+  const hasBackend = matched.includes('backend');
+
+  if (hasApi && hasBackend) {
+    const backendImplementationSignal = /\b(node\.?js|express|fastapi|django|flask|spring|laravel|rails|nestjs|hapi|koa|fastify|middleware|server|route|handler|controller|service|repository|http\s+server|microservice|apollo\s+server|prisma\s+client|trpc)\b/i;
+
+    if (!backendImplementationSignal.test(input)) {
+      return { primary: 'api', all: matched };
+    }
+  }
+
+  // Prefer implementation domains over 'api' when concrete stack/backend signals are present.
   const primary = matched.find((d) => d !== 'api') || matched[0];
 
   return { primary, all: matched };

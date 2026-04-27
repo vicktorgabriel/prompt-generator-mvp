@@ -211,7 +211,7 @@ function detectIntent(ctx: AnalysisContext): {
 
   if (migrationPattern && stackSignals.fromStack) {
     addScore(scores, "architecture_design", 10, reasons, `detecta migración de ${stackSignals.fromStack} a ${stackSignals.toStack}`);
-  } else if (migrationPattern && projectContext) {
+  } else if (migrationPattern && projectContext && !tokenStartsWithAny(ctx, ["refactor", "reorganiz", "limpi"])) {
     addScore(scores, "architecture_design", 8, reasons, "detecta patrón de migración/refactorización con proyecto existente");
   } else if (migrationPattern) {
     addScore(scores, "architecture_design", 6, reasons, "menciona términos de migración o arquitectura");
@@ -299,6 +299,10 @@ function detectIntent(ctx: AnalysisContext): {
 
   if (projectContext && (uiSurfaceSignals || fixActionSignals || migrationSignals || existingDataSignals)) {
     addScore(scores, "review_existing_project", 9, reasons, "habla de un proyecto existente que debe revisarse o adaptarse");
+  }
+
+  if (projectContext && tokenStartsWithAny(ctx, ["refactor", "reorganiz", "limpi"])) {
+    addScore(scores, "review_existing_project", 9, reasons, "pide refactorizar o reorganizar archivos de un proyecto existente");
   }
 
   if (projectContext && migrationSignals && existingDataSignals) {
@@ -419,8 +423,8 @@ function detectDomain(ctx: AnalysisContext): {
     addScore(scores, "web_app", 5, reasons, "apunta a un proyecto web existente o una página/sitio");
   }
 
-  if (hasAnyWord(ctx, ["escritorio", "desktop", "local"])) {
-    addScore(scores, "desktop_app", 6, reasons, "menciona entorno de escritorio/local");
+  if (hasAnyWord(ctx, ["escritorio", "desktop", "local", "locales", "archivos", "filesystem", "mcp"])) {
+    addScore(scores, "desktop_app", 6, reasons, "menciona entorno de escritorio/local, archivos locales o MCP");
   }
 
   if (hasAnyWord(ctx, ["python", "fastapi", "flask"])) {

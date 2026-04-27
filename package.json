@@ -13,7 +13,7 @@
     "build": "tsc -p tsconfig.json",
     "check": "tsc --noEmit -p tsconfig.json",
     "cli": "node --import tsx src/cli/index.js",
-    "test": "node --test tests/*.test.js"
+    "test": "npm run build && node --test tests/*.test.js"
   },
   "bin": {
     "prompt-gen": "src/cli/index.js"

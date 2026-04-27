@@ -1,5 +1,6 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { randomUUID } from "node:crypto";
 import type {
   PromptFeedbackEntry,
   PromptResult,
@@ -19,25 +20,57 @@ export const defaultPreferences: UserPreferences = {
   includeAssumptions: true,
 };
 
-async function ensureFile(filePath: string, initialContent: string): Promise<void> {
+function stringifyJson<T>(data: T): string {
+  return `${JSON.stringify(data, null, 2)}\n`;
+}
+
+function createBackupPath(filePath: string): string {
+  const safeTimestamp = new Date().toISOString().replace(/[:.]/g, "-");
+  return `${filePath}.corrupt-${safeTimestamp}.bak`;
+}
+
+async function ensureDirectory(filePath: string): Promise<void> {
   await mkdir(path.dirname(filePath), { recursive: true });
+}
+
+async function writeJsonFile<T>(filePath: string, data: T): Promise<void> {
+  await ensureDirectory(filePath);
+
+  const tempPath = `${filePath}.${process.pid}.${Date.now()}.${randomUUID()}.tmp`;
+  await writeFile(tempPath, stringifyJson(data), "utf8");
+  await rename(tempPath, filePath);
+}
+
+async function ensureJsonFile<T>(filePath: string, fallback: T): Promise<void> {
+  await ensureDirectory(filePath);
 
   try {
     await readFile(filePath, "utf8");
   } catch {
-    await writeFile(filePath, initialContent, "utf8");
+    await writeJsonFile(filePath, fallback);
+  }
+}
+
+async function backupCorruptJson(filePath: string): Promise<void> {
+  try {
+    await copyFile(filePath, createBackupPath(filePath));
+  } catch {
+    // Backup is best-effort. The caller will still restore a valid JSON file.
   }
 }
 
 async function readJsonFile<T>(filePath: string, fallback: T): Promise<T> {
-  await ensureFile(filePath, JSON.stringify(fallback, null, 2));
-  const raw = await readFile(filePath, "utf8");
-  return JSON.parse(raw) as T;
-}
+  await ensureJsonFile(filePath, fallback);
 
-async function writeJsonFile<T>(filePath: string, data: T): Promise<void> {
-  await ensureFile(filePath, JSON.stringify(data, null, 2));
-  await writeFile(filePath, JSON.stringify(data, null, 2), "utf8");
+  const raw = await readFile(filePath, "utf8");
+
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    await backupCorruptJson(filePath);
+    await writeJsonFile(filePath, fallback);
+    return fallback;
+  }
 }
 
 export async function saveGeneration(result: PromptResult): Promise<void> {

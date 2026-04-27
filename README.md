@@ -6,7 +6,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**v0.9** - Enhanced domains, improved intent detection, new CLI flags, comprehensive tests
+**v0.7.0** - Enhanced domains, improved intent detection, new CLI flags, comprehensive tests
 
 ---
 

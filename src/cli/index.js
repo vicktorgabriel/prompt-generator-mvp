@@ -10,18 +10,29 @@
  *   prompt-gen "pedido" --json
  *   prompt-gen "pedido" -o output.txt
  *   prompt-gen "pedido" --output-file my-prompt.txt
- *   prompt-gen "pedido" --model claude    # use model-adapter
+ *   prompt-gen "pedido" --model claude
  */
 
-import readline from 'readline';
-import fs from 'fs';
-import path from 'path';
+import readline from 'node:readline';
+import fs from 'node:fs';
+import path from 'node:path';
 import { generatePromptResult } from '../../packages/core/src/index.js';
-import { generateForModel, generateForAllModels, getAvailableModels } from '../../src/generator/index.js';
+import { generateForModel, getAvailableModels } from '../generator/index.js';
+
+const STYLE_ALIASES = {
+  detailed: 'technical',
+  technical: 'technical',
+  concise: 'concise',
+  balanced: 'balanced',
+  step_by_step: 'step_by_step',
+  'step-by-step': 'step_by_step',
+};
+
+const DETAIL_LEVELS = new Set(['low', 'medium', 'high']);
 
 const BANNER = `
 ╔════════════════════════════════════════════════════════╗
-║       prompt-gen — Intelligent Prompt Generator    ║
+║       prompt-gen — Intelligent Prompt Generator       ║
 ║  Commands: :quit  :clear  :help  :history            ║
 ║  Flags:   --style    --detail   --json   -o   --model║
 ╚════════════════════════════════════════════════════════╝
@@ -29,16 +40,16 @@ const BANNER = `
 
 const HELP = `
 Usage:
-  prompt-gen "tu pedido"              single-shot
-  prompt-gen "pedido" --style technical  --style: technical|concise|detailed
-  prompt-gen "pedido" --detail high      --detail: low|medium|high
-  prompt-gen "pedido" --json            --json: output as JSON
-  prompt-gen "pedido" -o file.txt       --output-file: save to file
-  prompt-gen "pedido" --no-assumptions  skip assumptions
-  prompt-gen "pedido" --model gemini     --model: gemini|claude|codex|universal
+  prompt-gen "tu pedido"                    single-shot
+  prompt-gen "pedido" --style technical    --style: technical|concise|balanced|step_by_step
+  prompt-gen "pedido" --detail high        --detail: low|medium|high
+  prompt-gen "pedido" --json               output as JSON
+  prompt-gen "pedido" -o file.txt          save to file
+  prompt-gen "pedido" --no-assumptions     skip assumptions
+  prompt-gen "pedido" --model gemini       --model: gemini|claude|codex|universal
 
 Model-Specific Optimization:
-  --model <type>    Use heavy model-adapter algorithm
+  --model <type>    Use model-adapter algorithm
                    Available: ${getAvailableModels().join(', ')}
 
 Commands:
@@ -47,7 +58,6 @@ Commands:
   :help       Show this help
   :history    Show session history
   :models     List available models
-  :compare    Generate for all models
 
 Examples:
   prompt-gen "migrate from express to fastify" --style technical
@@ -56,12 +66,42 @@ Examples:
   prompt-gen "build an API" --model gemini --json
 `;
 
-function parseArgs(args) {
+function consumeValue(args, index, flagName) {
+  const next = args[index + 1];
+  if (!next || next.startsWith('-')) {
+    throw new Error(`Missing value for ${flagName}`);
+  }
+  return next;
+}
+
+function normalizeStyle(value) {
+  const normalized = String(value).trim().toLowerCase();
+  const mapped = STYLE_ALIASES[normalized];
+
+  if (!mapped) {
+    throw new Error(`Invalid --style value: ${value}`);
+  }
+
+  return mapped;
+}
+
+function normalizeDetail(value) {
+  const normalized = String(value).trim().toLowerCase();
+
+  if (!DETAIL_LEVELS.has(normalized)) {
+    throw new Error(`Invalid --detail value: ${value}`);
+  }
+
+  return normalized;
+}
+
+function parseArgs(argv) {
   const result = {
-    message: '',
+    messageParts: [],
     preferences: {
       detailLevel: 'medium',
       outputStyle: 'concise',
+      includeFileStructure: true,
       includeAssumptions: true,
       targetModel: 'universal',
     },
@@ -70,46 +110,85 @@ function parseArgs(args) {
     useModelAdapter: false,
   };
 
-  const filtered = args.filter(arg => {
-    if (arg.startsWith('--style=')) {
-      result.preferences.outputStyle = arg.replace('--style=', '');
-      return false;
-    }
-    if (arg.startsWith('--detail=')) {
-      result.preferences.detailLevel = arg.replace('--detail=', '');
-      return false;
-    }
-    if (arg.startsWith('--model=')) {
-      result.preferences.targetModel = arg.replace('--model=', '');
-      result.useModelAdapter = true;
-      return false;
-    }
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = argv[index];
+
     if (arg === '--json') {
       result.json = true;
-      return false;
+      continue;
     }
+
     if (arg === '--no-assumptions') {
       result.preferences.includeAssumptions = false;
-      return false;
+      continue;
     }
-    if (arg === '-o' || arg === '--output-file' || arg === '--output') {
-      return false; // handled by next arg
-    }
-    if (arg.startsWith('-o=') || arg.startsWith('--output-file=') || arg.startsWith('--output=')) {
-      result.outputFile = arg.replace(/^[^=]+=/, '');
-      return false;
-    }
-    return true;
-  });
 
-  // Handle -o with next argument
-  const oIndex = args.findIndex(arg => arg === '-o' || arg === '--output-file' || arg === '--output');
-  if (oIndex !== -1 && oIndex < args.length - 1) {
-    result.outputFile = args[oIndex + 1];
+    if (arg === '--style') {
+      const value = consumeValue(argv, index, '--style');
+      result.preferences.outputStyle = normalizeStyle(value);
+      index += 1;
+      continue;
+    }
+
+    if (arg.startsWith('--style=')) {
+      result.preferences.outputStyle = normalizeStyle(arg.slice('--style='.length));
+      continue;
+    }
+
+    if (arg === '--detail') {
+      const value = consumeValue(argv, index, '--detail');
+      result.preferences.detailLevel = normalizeDetail(value);
+      index += 1;
+      continue;
+    }
+
+    if (arg.startsWith('--detail=')) {
+      result.preferences.detailLevel = normalizeDetail(arg.slice('--detail='.length));
+      continue;
+    }
+
+    if (arg === '--model') {
+      const value = consumeValue(argv, index, '--model');
+      result.preferences.targetModel = value;
+      result.useModelAdapter = true;
+      index += 1;
+      continue;
+    }
+
+    if (arg.startsWith('--model=')) {
+      result.preferences.targetModel = arg.slice('--model='.length);
+      result.useModelAdapter = true;
+      continue;
+    }
+
+    if (arg === '-o' || arg === '--output-file' || arg === '--output') {
+      result.outputFile = consumeValue(argv, index, arg);
+      index += 1;
+      continue;
+    }
+
+    if (arg.startsWith('-o=')) {
+      result.outputFile = arg.slice('-o='.length);
+      continue;
+    }
+
+    if (arg.startsWith('--output-file=')) {
+      result.outputFile = arg.slice('--output-file='.length);
+      continue;
+    }
+
+    if (arg.startsWith('--output=')) {
+      result.outputFile = arg.slice('--output='.length);
+      continue;
+    }
+
+    result.messageParts.push(arg);
   }
 
-  result.message = filtered.join(' ');
-  return result;
+  return {
+    ...result,
+    message: result.messageParts.join(' ').trim(),
+  };
 }
 
 function writeOutput(content, filePath) {
@@ -120,9 +199,17 @@ function writeOutput(content, filePath) {
     }
     fs.writeFileSync(filePath, content, 'utf8');
     return true;
-  } catch (err) {
+  } catch {
     return false;
   }
+}
+
+function formatConfidence(value) {
+  if (typeof value === 'number') {
+    return `${(value * 100).toFixed(0)}%`;
+  }
+
+  return value || 'n/a';
 }
 
 function formatOutput(result, style = 'concise') {
@@ -132,7 +219,7 @@ function formatOutput(result, style = 'concise') {
 
   let output = '';
 
-  if (style === 'technical' || style === 'detailed') {
+  if (style === 'technical' || style === 'step_by_step') {
     output += '\n╔══════════════════════════════════════════════════════════════╗\n';
     output += '║                    CLASSIFICATION                            ║\n';
     output += '╚══════════════════════════════════════════════════════════════╝\n';
@@ -140,168 +227,129 @@ function formatOutput(result, style = 'concise') {
     output += `  Domain             : ${result.domain}\n`;
     output += `  Strategy           : ${result.strategy}\n`;
     output += `  Profile            : ${result.generationProfile}\n`;
-    output += `  Confidence         : ${(result.classificationConfidence * 100).toFixed(0)}%\n`;
-    output += `  Target Model       : ${result.targetModel || 'universal'}\n`;
+    output += `  Confidence         : ${formatConfidence(result.classificationConfidence)}\n`;
 
     if (result.synthesis?.primaryGoal) {
       output += '\n╔══════════════════════════════════════════════════════════════╗\n';
-      output += '║                       SYNTHESIS                               ║\n';
+      output += '║                       SYNTHESIS                              ║\n';
       output += '╚══════════════════════════════════════════════════════════════╝\n';
       output += `  Primary Goal    : ${result.synthesis.primaryGoal}\n`;
-      if (result.synthesis.workMode) {
-        output += `  Work Mode       : ${result.synthesis.workMode}\n`;
-      }
+      output += `  Work Mode       : ${result.synthesis.workMode || 'n/a'}\n`;
+      output += `  Evidence Mode   : ${result.synthesis.evidenceMode || 'n/a'}\n`;
       if (result.synthesis.constraints?.length > 0) {
         output += `  Constraints     : ${result.synthesis.constraints.join(', ')}\n`;
       }
     }
   } else {
-    // Concise style
     output += `[${result.intent}] ${result.domain} · ${result.strategy}\n`;
     if (result.synthesis?.primaryGoal) {
       output += `Goal: ${result.synthesis.primaryGoal}\n`;
     }
   }
 
+  if (result.needsClarification && result.clarificationQuestions?.length > 0) {
+    output += '\n╔══════════════════════════════════════════════════════════════╗\n';
+    output += '║                 CLARIFICATION NEEDED                         ║\n';
+    output += '╚══════════════════════════════════════════════════════════════╝\n';
+    result.clarificationQuestions.forEach((question) => {
+      output += `  ? ${question.label}\n`;
+    });
+  }
+
   output += '\n╔══════════════════════════════════════════════════════════════╗\n';
-  output += '║                    GENERATED PROMPTS                          ║\n';
+  output += '║                    GENERATED PROMPTS                         ║\n';
   output += '╚══════════════════════════════════════════════════════════════╝\n';
 
-  result.generatedPrompts.forEach((p, i) => {
-    output += `\n── ${p.label} (${p.kind}) ──\n`;
-    output += p.content + '\n';
-  });
+  if (!result.generatedPrompts?.length) {
+    output += '\n(no prompts generated)\n';
+  } else {
+    result.generatedPrompts.forEach((prompt) => {
+      output += `\n── ${prompt.label} (${prompt.kind}) ──\n`;
+      output += `${prompt.content}\n`;
+    });
+  }
 
-  if (result.ambiguity?.level !== 'low' && result.ambiguity?.hints?.length > 0) {
+  if (result.suggestedNextInputs?.length > 0) {
     output += '\n╔══════════════════════════════════════════════════════════════╗\n';
-    output += '║                       HINTS                                   ║\n';
+    output += '║                    SUGGESTED NEXT INPUTS                     ║\n';
     output += '╚══════════════════════════════════════════════════════════════╝\n';
-    result.ambiguity.hints.forEach(hint => {
-      output += `  ⚠️  ${hint}\n`;
+    result.suggestedNextInputs.forEach((suggestion) => {
+      output += `  → ${suggestion}\n`;
     });
   }
 
   return output;
 }
 
-/**
- * Format model-adapter output
- */
-function formatModelAdapterOutput(result, modelType) {
+function formatModelAdapterOutput(result) {
   if (!result.optimized) {
     return result.adapted.prompt;
   }
 
-  const { optimized, modelInfo, analysis } = result;
+  const { optimized, modelInfo } = result;
 
   let output = '';
   output += '\n╔══════════════════════════════════════════════════════════════╗\n';
-  output += '║               MODEL-SPECIFIC ADAPTATION                       ║\n';
+  output += '║               MODEL-SPECIFIC ADAPTATION                      ║\n';
   output += '╚══════════════════════════════════════════════════════════════╝\n';
   output += `  Target Model   : ${optimized.model}\n`;
   output += `  Provider       : ${optimized.provider}\n`;
   output += `  Quality Score  : ${optimized.quality.score}/100 (${optimized.quality.level})\n`;
-  output += `  Context Window : ${(modelInfo?.contextWindow / 1000).toLocaleString()}K tokens\n`;
-  output += `  Max Output     : ${(modelInfo?.maxOutputTokens / 1024).toFixed(1)}K tokens\n`;
 
-  output += '\n╔══════════════════════════════════════════════════════════════╗\n';
-  output += '║                 RESPONSE STYLE PREFERENCES                 ║\n';
-  output += '╚══════════════════════════════════════════════════════════════╝\n';
-  if (modelInfo?.responseStyle) {
-    output += `  Verbosity      : ${modelInfo.responseStyle.verbosity}\n`;
-    output += `  Structure      : ${modelInfo.responseStyle.structure}\n`;
-    output += `  Reasoning      : ${modelInfo.responseStyle.reasoning}\n`;
-    output += `  Code Style     : ${modelInfo.responseStyle.codeStyle}\n`;
+  if (modelInfo?.contextWindow) {
+    output += `  Context Window : ${(modelInfo.contextWindow / 1000).toLocaleString()}K tokens\n`;
+  }
+  if (modelInfo?.maxOutputTokens) {
+    output += `  Max Output     : ${(modelInfo.maxOutputTokens / 1024).toFixed(1)}K tokens\n`;
   }
 
   output += '\n╔══════════════════════════════════════════════════════════════╗\n';
-  output += '║                    GENERATED PROMPT                          ║\n';
+  output += '║                    GENERATED PROMPT                         ║\n';
   output += '╚══════════════════════════════════════════════════════════════╝\n';
-  output += optimized.prompt + '\n';
+  output += `${optimized.prompt}\n`;
 
-  output += '\n╔══════════════════════════════════════════════════════════════╗\n';
-  output += '║                      STRENGTHS                              ║\n';
-  output += '╚══════════════════════════════════════════════════════════════╝\n';
-  if (modelInfo?.strengths) {
-    modelInfo.strengths.forEach(s => {
-      output += `  ✦ ${s}\n`;
+  if (modelInfo?.strengths?.length) {
+    output += '\n╔══════════════════════════════════════════════════════════════╗\n';
+    output += '║                      STRENGTHS                              ║\n';
+    output += '╚══════════════════════════════════════════════════════════════╝\n';
+    modelInfo.strengths.forEach((strength) => {
+      output += `  ✦ ${strength}\n`;
     });
   }
 
   return output;
 }
 
-/**
- * Format multi-model comparison output
- */
-function formatAllModelsOutput(result) {
-  let output = '';
-  const { analysis, models } = result;
+async function singleShot(argv) {
+  const args = parseArgs(Array.isArray(argv) ? argv : String(argv).split(' '));
 
-  output += '\n╔══════════════════════════════════════════════════════════════╗\n';
-  output += '║              ALL MODELS COMPARISON                          ║\n';
-  output += '╚══════════════════════════════════════════════════════════════╝\n';
-  output += `  Input Analysis: ${analysis.intent} | ${analysis.domain} | ${analysis.strategy}\n`;
-
-  const sortedModels = Object.entries(models)
-    .map(([name, data]) => ({ name, ...data }))
-    .sort((a, b) => (b.quality?.score || 0) - (a.quality?.score || 0));
-
-  sortedModels.forEach((model, i) => {
-    output += `\n── ${i + 1}. ${model.model} (${model.provider}) ──\n`;
-    output += `   Quality: ${model.quality?.score || '?'}/100 (${model.quality?.level || 'unknown'})\n`;
-    output += `   Tokens: ~${Math.round(model.prompt.length / 4).toLocaleString()} input\n`;
-    output += `   Preview: ${model.prompt.substring(0, 150).replace(/\n/g, ' ')}...\n`;
-  });
-
-  output += '\n═══════════════════════════════════════════════════════════════\n';
-  output += 'Use --model <name> to generate full prompt for specific model\n';
-
-  return output;
-}
-
-async function singleShot(input) {
-  const args = parseArgs(input.split(' '));
-
-  if (!args.message.trim()) {
-    console.log('Error: provide a message. Use --help for usage.');
-    process.exit(1);
+  if (!args.message) {
+    throw new Error('Provide a message. Use --help for usage.');
   }
 
-  try {
-    let outputContent;
+  let outputContent;
 
-    if (args.useModelAdapter) {
-      // Use the heavy model-adapter algorithm
-      const modelResult = generateForModel(args.message, args.preferences.targetModel, { fullPrompt: true });
-      outputContent = formatModelAdapterOutput(modelResult, args.preferences.targetModel);
-    } else {
-      // Use original generation
-      const result = await generatePromptResult({
-        message: args.message,
-        preferences: args.preferences,
-      });
-      const outputStyle = args.json ? 'json' : args.preferences.outputStyle;
-      outputContent = formatOutput(result, outputStyle);
+  if (args.useModelAdapter) {
+    const modelResult = generateForModel(args.message, args.preferences.targetModel, { fullPrompt: true });
+    outputContent = formatModelAdapterOutput(modelResult);
+  } else {
+    const result = await generatePromptResult({
+      message: args.message,
+      preferences: args.preferences,
+    });
+    const outputStyle = args.json ? 'json' : args.preferences.outputStyle;
+    outputContent = formatOutput(result, outputStyle);
+  }
+
+  if (args.outputFile) {
+    const success = writeOutput(outputContent, args.outputFile);
+    if (!success) {
+      throw new Error(`Could not write to ${args.outputFile}`);
     }
-
-    // Handle output
-    if (args.outputFile) {
-      const success = writeOutput(outputContent, args.outputFile);
-      if (success) {
-        console.log(`\n✅ Prompt saved to: ${args.outputFile}`);
-        console.log(`   (${fs.statSync(args.outputFile).size} bytes)`);
-      } else {
-        console.error(`\n❌ Error: Could not write to ${args.outputFile}`);
-        process.exit(1);
-      }
-    } else {
-      console.log(outputContent);
-    }
-
-  } catch (err) {
-    console.error(`Error: ${err.message}`);
-    process.exit(1);
+    console.log(`\n✅ Prompt saved to: ${args.outputFile}`);
+    console.log(`   (${fs.statSync(args.outputFile).size} bytes)`);
+  } else {
+    console.log(outputContent);
   }
 }
 
@@ -319,7 +367,10 @@ function interactiveMode() {
 
   rl.on('line', async (line) => {
     const trimmed = line.trim();
-    if (!trimmed) { rl.prompt(); return; }
+    if (!trimmed) {
+      rl.prompt();
+      return;
+    }
 
     if (trimmed === ':quit' || trimmed === ':q' || trimmed === 'exit') {
       console.log('Goodbye!');
@@ -336,26 +387,28 @@ function interactiveMode() {
       return;
     }
     if (trimmed === ':history' || trimmed === ':hist') {
-      if (history.length === 0) console.log('  (no history)');
-      else history.forEach((h, i) => console.log(`  ${i + 1}. ${h.substring(0, 80)}${h.length > 80 ? '...' : ''}`));
+      if (history.length === 0) {
+        console.log('  (no history)');
+      } else {
+        history.forEach((item, index) => console.log(`  ${index + 1}. ${item.substring(0, 80)}${item.length > 80 ? '...' : ''}`));
+      }
       rl.prompt();
       return;
     }
     if (trimmed === ':models') {
       const models = getAvailableModels();
       console.log('  Available models for --model flag:');
-      models.forEach(m => console.log(`    - ${m}`));
-      rl.prompt();
-      return;
-    }
-    if (trimmed === ':compare') {
-      console.log('  Use: prompt-gen "input" --all-models');
+      models.forEach((model) => console.log(`    - ${model}`));
       rl.prompt();
       return;
     }
 
     history.push(trimmed);
-    await singleShot(trimmed);
+    try {
+      await singleShot([trimmed]);
+    } catch (error) {
+      console.error(`Error: ${error.message}`);
+    }
     rl.prompt();
   });
 
@@ -365,7 +418,6 @@ function interactiveMode() {
   });
 }
 
-// Main entry point
 const args = process.argv.slice(2);
 
 if (args.length === 0) {
@@ -373,7 +425,10 @@ if (args.length === 0) {
 } else if (args[0] === '--help' || args[0] === '-h' || args[0] === '?') {
   console.log(HELP);
 } else if (!args[0].startsWith(':')) {
-  singleShot(args.join(' '));
+  singleShot(args).catch((error) => {
+    console.error(`Error: ${error.message}`);
+    process.exit(1);
+  });
 } else {
   interactiveMode();
 }

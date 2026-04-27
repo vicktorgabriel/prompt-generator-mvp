@@ -1,10 +1,20 @@
 import express from "express";
+import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { generatePromptResult } from "../../../packages/core/src/index.js";
 import { promptPresets } from "../../../packages/presets/src/index.js";
 import { readHistory, readPreferences, saveFeedback, savePreferences } from "../../../packages/storage/src/index.js";
-import type { PromptFeedbackEntry, PromptRequest, UserPreferences } from "../../../packages/shared-types/src/index.js";
+import {
+  validateFeedbackRequest,
+  validatePreferencesRequest,
+  validatePromptRequest,
+} from "../../../packages/validators/src/index.js";
+
+const require = createRequire(import.meta.url);
+const packageJson = require("../../../package.json") as { name?: string; version?: string };
+const packageName = packageJson.name ?? "prompt-generator-mvp";
+const packageVersion = packageJson.version ?? "0.0.0";
 
 const app = express();
 const port = Number(process.env.PORT ?? 4173);
@@ -17,7 +27,7 @@ app.use(express.json({ limit: "1mb" }));
 app.use(express.static(publicDir));
 
 app.get("/api/health", (_req, res) => {
-  res.json({ ok: true, name: "prompt-generator-mvp", version: "0.7.0" });
+  res.json({ ok: true, name: packageName, version: packageVersion });
 });
 
 app.get("/api/history", async (req, res) => {
@@ -36,22 +46,27 @@ app.get("/api/preferences", async (_req, res) => {
 });
 
 app.post("/api/preferences", async (req, res) => {
-  const body = (req.body ?? {}) as Partial<UserPreferences>;
-  const next = await savePreferences(body);
+  const validation = validatePreferencesRequest(req.body ?? {});
+
+  if (!validation.ok) {
+    res.status(400).json({ error: "Preferencias inválidas.", details: validation.errors });
+    return;
+  }
+
+  const next = await savePreferences(validation.value);
   res.json(next);
 });
 
 app.post("/api/feedback", async (req, res) => {
-  const body = req.body as Partial<PromptFeedbackEntry>;
+  const validation = validateFeedbackRequest(req.body ?? {});
 
-  if (!body?.requestId || !body?.value) {
-    res.status(400).json({ error: "Faltan requestId o value." });
+  if (!validation.ok) {
+    res.status(400).json({ error: "Feedback inválido.", details: validation.errors });
     return;
   }
 
   const saved = await saveFeedback({
-    requestId: body.requestId,
-    value: body.value,
+    ...validation.value,
     createdAt: new Date().toISOString(),
   });
 
@@ -59,21 +74,15 @@ app.post("/api/feedback", async (req, res) => {
 });
 
 app.post("/api/generate", async (req, res) => {
-  const body = req.body as PromptRequest;
+  const validation = validatePromptRequest(req.body ?? {});
 
-  if (!body?.message || typeof body.message !== "string") {
-    res.status(400).json({ error: "Falta el campo message." });
+  if (!validation.ok) {
+    res.status(400).json({ error: "Pedido inválido.", details: validation.errors });
     return;
   }
 
   try {
-    const result = await generatePromptResult({
-      message: body.message,
-      contextMessages: Array.isArray(body.contextMessages) ? body.contextMessages : [],
-      sessionId: body.sessionId,
-      presetId: body.presetId ?? null,
-      preferences: body.preferences ?? {},
-    });
+    const result = await generatePromptResult(validation.value);
 
     res.json(result);
   } catch (error) {

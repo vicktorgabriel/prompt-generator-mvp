@@ -46,6 +46,8 @@ function focusComposer() {
 }
 
 function updatePresetStatus() {
+  if (!activePresetLabel) return;
+
   if (!currentPresetId || !presetMap.has(currentPresetId)) {
     activePresetLabel.textContent = "Sin ejemplo activo";
     return;
@@ -230,7 +232,6 @@ function createSummaryGrid(result) {
     ["Ambigüedad", result.ambiguityLevel],
     ["Prompts", String(result.generatedPrompts.length)],
     ["Perfil", result.generationProfile || "generic"],
-    ["Ejemplo", result.presetId ? (presetMap.get(result.presetId)?.label || result.presetId) : "ninguno"],
   ];
 
   for (const [label, value] of items) {
@@ -514,6 +515,7 @@ async function loadHistory() {
 
 function renderPresets(presets) {
   presetMap = new Map(presets.map((preset) => [preset.id, preset]));
+  if (!presetList) return;
   presetList.innerHTML = "";
 
   for (const preset of presets) {
@@ -597,6 +599,8 @@ async function savePreferences() {
 }
 
 async function loadPresets() {
+  if (!presetList) return;
+
   try {
     const response = await fetch("/api/presets");
     const presets = await response.json();
@@ -609,7 +613,7 @@ async function loadPresets() {
 }
 
 preferenceForm.addEventListener("change", savePreferences);
-clearPresetButton.addEventListener("click", () => {
+clearPresetButton?.addEventListener("click", () => {
   currentPresetId = null;
   updatePresetStatus();
   loadPresets();

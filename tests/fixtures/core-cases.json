@@ -1,0 +1,55 @@
+[
+  {
+    "name": "migration-existing-mongoose-prisma",
+    "message": "migrar el repo existente de Mongoose a Prisma en src/models sin rehacer todo desde cero",
+    "expected": {
+      "intent": "review_existing_project",
+      "strategy": "migrate_existing_system",
+      "generationProfile": "existing_system_migration"
+    }
+  },
+  {
+    "name": "login-jwt-debug",
+    "message": "debug el bug de login con JWT en el backend, falla al refrescar el token",
+    "expected": {
+      "intent": "debugging",
+      "domain": "api",
+      "strategy": "implement_new"
+    }
+  },
+  {
+    "name": "react-tailwind-landing",
+    "message": "crear una landing moderna en React con Tailwind CSS y TypeScript, hero, navbar, cards y diseño responsive",
+    "expected": {
+      "intent": "code_generation",
+      "domain": "react",
+      "strategy": "implement_new",
+      "generationProfile": "modern_modular_landing"
+    }
+  },
+  {
+    "name": "existing-auth-service-refactor",
+    "message": "refactorizar src/services/auth.js en este repo para separar responsabilidades sin romper el flujo actual",
+    "expected": {
+      "intent": "review_existing_project",
+      "strategy": "inspect_and_adapt"
+    }
+  },
+  {
+    "name": "ambiguous-app-help",
+    "message": "ayudame con mi app",
+    "expected": {
+      "ambiguityLevel": "high",
+      "needsClarification": true,
+      "generatedPromptsLength": 0
+    }
+  },
+  {
+    "name": "mcp-agent-workflow",
+    "message": "diseñar un agente MCP que lea archivos locales, ejecute comandos seguros y arme un workflow de revisión",
+    "expected": {
+      "intent": "automation_agent",
+      "domain": "desktop_app"
+    }
+  }
+]
